@@ -1,6 +1,7 @@
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+-- 关键：换成 jsDelivr 镜像，国内可访问
+local WindUI = loadstring(game:HttpGet("https://cdn.jsdelivr.net/gh/Footagesus/WindUI@main/main.lua"))()
 
--- ============ 开屏欢迎特效（与 WindUI 下载并行）============
+-- ============ 开屏欢迎特效 ============
 task.spawn(function()
     local TweenService = game:GetService("TweenService")
     local LocalPlayer = game:GetService("Players").LocalPlayer
