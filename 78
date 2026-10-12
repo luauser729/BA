@@ -2,8 +2,9 @@ local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/rel
 
 -- ============ 开屏欢迎特效 ============
 task.spawn(function()
+    local Players = game:GetService("Players")
     local TweenService = game:GetService("TweenService")
-    local LocalPlayer = game:GetService("Players").LocalPlayer
+    local LocalPlayer = Players.LocalPlayer
 
     local splashGui = Instance.new("ScreenGui")
     splashGui.Name = "ShenSplashWelcome"
@@ -243,9 +244,7 @@ local Window = WindUI:CreateWindow({
             WindUI:Notify({ Title = "主题已切换", Content = "当前主题: " .. newTheme, Duration = 2, Icon = "palette" })
         end,
     },
-})
-
-local OPEN_BTN_WIDTH  = 160
+})local OPEN_BTN_WIDTH  = 160
 local OPEN_BTN_HEIGHT = 40
 
 Window:EditOpenButton({
@@ -677,9 +676,7 @@ task.spawn(function()
         memLabel.Text    = string.format('内存: <font color="rgb(120,200,255)">%.1f MB</font>', mem)
         playerLabel.Text = string.format('玩家: <font color="rgb(255,120,120)">%d / %d</font>', #Players:GetPlayers(), Players.MaxPlayers)
     end
-end)
-
-local welcomeGui = Instance.new("ScreenGui")
+end)local welcomeGui = Instance.new("ScreenGui")
 welcomeGui.Name = "ShenWelcomeGui"
 welcomeGui.ResetOnSpawn = false
 welcomeGui.IgnoreGuiInset = true
@@ -846,9 +843,7 @@ NoticeTab:Button({
     end,
 })
 
-NoticeTab:Paragraph({ Title = "👉 加群获取最新脚本 + 反馈问题", Desc = "" })
-
-local LocalTab = Window:Tab({ Title = "本地玩家", Icon = "user" })
+NoticeTab:Paragraph({ Title = "👉 加群获取最新脚本 + 反馈问题", Desc = "" })local LocalTab = Window:Tab({ Title = "本地玩家", Icon = "user" })
 LocalTab:Paragraph({ Title = "本地玩家修改", Desc = "修改移速、跳跃等自身属性", Image = "user", ImageSize = 20 })
 
 local function getHum()
@@ -1372,9 +1367,7 @@ task.spawn(function()
             pcall(function() healthLabel:SetTitle("❤️ 生命值: -- / --") end)
         end
     end
-end)
-
-local CommonTab = Window:Tab({ Title = "通用", Icon = "settings" })
+end)local CommonTab = Window:Tab({ Title = "通用", Icon = "settings" })
 CommonTab:Paragraph({ Title = "通用功能", Desc = "适用于大多数游戏的通用工具", Image = "settings", ImageSize = 20 })
 
 CommonTab:Button({
@@ -1816,9 +1809,7 @@ CommonTab:Button({
             WindUI:Notify({ Title = "❌ 加载失败", Content = tostring(err), Duration = 4, Icon = "alert-circle" })
         end
     end,
-})
-
-local ItemTab = Window:Tab({ Title = "道具", Icon = "package" })
+})local ItemTab = Window:Tab({ Title = "道具", Icon = "package" })
 
 ItemTab:Paragraph({
     Title = "神之道具",
@@ -2799,9 +2790,7 @@ ItemTab:Divider()
 ItemTab:Paragraph({
     Title = "⚠️ 道具类功能可能被部分游戏检测，请谨慎使用",
     Desc = "",
-})
-
--- ===== ESP 标签 =====
+})-- ===== ESP 标签（完整版 + 白名单 + 上下天线）=====
 local EspTab = Window:Tab({ Title = "ESP", Icon = "eye" })
 
 EspTab:Paragraph({
@@ -3308,69 +3297,127 @@ EspTab:Button({
             Icon = "list",
         })
     end,
-})
-
--- ===== 视角设置 标签 =====
+})-- ===== 视角设置 标签 =====
 local ViewTab = Window:Tab({ Title = "视角设置", Icon = "camera" })
 
 ViewTab:Paragraph({
     Title = "📷 视角设置",
-    Desc = "调整相机视角相关功能",
+    Desc = "自定义相机视野范围（FOV）",
     Image = "camera",
     ImageSize = 20,
 })
 
--- ============ FOV 视角自定义调节 ============
-local FOV_ENABLED = false
-local FOV_VALUE = 70
-local FOV_CONN = nil
+local FOV_DEFAULT = 70
+local fovEnabled = false
+local fovValue = 70
+local fovConn = nil
+
+local function getCamera()
+    return workspace.CurrentCamera
+end
 
 local function applyFOV()
-    if FOV_CONN then FOV_CONN:Disconnect() FOV_CONN = nil end
-    if not FOV_ENABLED then return end
-    FOV_CONN = RunService.RenderStepped:Connect(function()
-        local cam = workspace.CurrentCamera
-        if cam and cam.FieldOfView ~= FOV_VALUE then
-            cam.FieldOfView = FOV_VALUE
+    if fovConn then fovConn:Disconnect() fovConn = nil end
+
+    local cam = getCamera()
+    if not cam then return end
+
+    if not fovEnabled then
+        pcall(function() cam.FieldOfView = FOV_DEFAULT end)
+        return
+    end
+
+    pcall(function() cam.FieldOfView = fovValue end)
+    fovConn = RunService.RenderStepped:Connect(function()
+        local c = getCamera()
+        if c and math.abs(c.FieldOfView - fovValue) > 0.01 then
+            c.FieldOfView = fovValue
         end
     end)
 end
 
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+    if fovEnabled then
+        task.wait(0.1)
+        applyFOV()
+    end
+end)
+
 ViewTab:Toggle({
-    Title = "🎥 FOV 视角自定义",
-    Desc = "开启后锁定相机视野（FOV）为你设定的值",
+    Title = "开启 FOV 自定义",
+    Desc = "锁定相机视野范围，不随游戏改变",
     Value = false,
     Callback = function(state)
-        FOV_ENABLED = state
+        fovEnabled = state
         applyFOV()
-        if state then
-            WindUI:Notify({ Title = "🎥 FOV", Content = "已开启，当前 FOV = " .. FOV_VALUE, Duration = 2, Icon = "camera" })
-        else
-            WindUI:Notify({ Title = "🎥 FOV", Content = "已关闭，恢复默认 FOV", Duration = 2, Icon = "camera-off" })
-            local cam = workspace.CurrentCamera
-            if cam then cam.FieldOfView = 70 end
+        WindUI:Notify({
+            Title = "📷 FOV",
+            Content = state and ("已锁定 FOV: " .. tostring(fovValue)) or "已恢复默认 FOV",
+            Duration = 2,
+            Icon = "camera",
+        })
+    end,
+})
+
+ViewTab:Slider({
+    Title = "FOV 数值",
+    Desc = "推荐 40（狙击感）～ 120（广角）",
+    Value = 70,
+    Min = 20,
+    Max = 180,
+    Rounding = 1,
+    Callback = function(value)
+        fovValue = value
+        if fovEnabled then
+            local c = getCamera()
+            if c then pcall(function() c.FieldOfView = fovValue end) end
         end
     end,
 })
 
 ViewTab:Input({
-    Title = "🎥 FOV 数值",
-    Desc = "推荐 40 - 160，默认 70",
+    Title = "FOV 精确数值（手动输入）",
+    Desc = "输入 20 - 180 之间的数字",
     Value = "70",
     Placeholder = "默认 70",
     Callback = function(text)
         local num = tonumber(text)
-        if num and num >= 1 and num <= 200 then
-            FOV_VALUE = num
-            if FOV_ENABLED then
-                local cam = workspace.CurrentCamera
-                if cam then cam.FieldOfView = FOV_VALUE end
+        if num and num >= 20 and num <= 180 then
+            fovValue = num
+            if fovEnabled then
+                local c = getCamera()
+                if c then pcall(function() c.FieldOfView = fovValue end) end
             end
         else
-            WindUI:Notify({ Title = "数值错误", Content = "请输入 1 - 200 之间的有效数字", Duration = 3, Icon = "alert-circle" })
+            WindUI:Notify({ Title = "数值错误", Content = "请输入 20 - 180 之间的有效数字", Duration = 3, Icon = "alert-circle" })
         end
     end,
 })
+
+ViewTab:Divider()
+
+ViewTab:Button({
+    Title = "🎯 重置为默认 FOV (70)",
+    Desc = "把 FOV 恢复为 Roblox 默认的 70",
+    Callback = function()
+        fovValue = 70
+        local c = getCamera()
+        if c then pcall(function() c.FieldOfView = 70 end) end
+        WindUI:Notify({ Title = "📷 FOV", Content = "已重置为 70", Duration = 2, Icon = "refresh-cw" })
+    end,
+})
+
+ViewTab:Divider()
+
+ViewTab:Paragraph({
+    Title = "💡 常见 FOV 数值参考",
+    Desc = "",
+})
+ViewTab:Paragraph({ Title = "• 40 ~ 60：第一人称/狙击视角（视野窄，目标大）", Desc = "" })
+ViewTab:Paragraph({ Title = "• 70：Roblox 默认 FOV", Desc = "" })
+ViewTab:Paragraph({ Title = "• 80 ~ 100：舒适游戏视角（视野略宽）", Desc = "" })
+ViewTab:Paragraph({ Title = "• 110 ~ 130：广角视角（视野开阔）", Desc = "" })
+ViewTab:Paragraph({ Title = "• 140 ~ 180：超广角/眩晕视角（不推荐）", Desc = "" })
 
 --============================================================
 -- 通知系统
