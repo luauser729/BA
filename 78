@@ -1,10 +1,9 @@
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
--- ============ 开屏欢迎特效（立即弹出，不等 WindUI 加载）============
+-- ============ 开屏欢迎特效（与 WindUI 下载并行）============
 task.spawn(function()
-    local Players = game:GetService("Players")
     local TweenService = game:GetService("TweenService")
-    local LocalPlayer = Players.LocalPlayer
+    local LocalPlayer = game:GetService("Players").LocalPlayer
 
     local splashGui = Instance.new("ScreenGui")
     splashGui.Name = "ShenSplashWelcome"
@@ -2802,7 +2801,7 @@ ItemTab:Paragraph({
     Desc = "",
 })
 
--- ===== ESP 标签（完整版 + 白名单 + 上下天线）=====
+-- ===== ESP 标签 =====
 local EspTab = Window:Tab({ Title = "ESP", Icon = "eye" })
 
 EspTab:Paragraph({
